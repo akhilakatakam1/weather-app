@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import L from "leaflet";
+import type { Map, Icon } from "leaflet";
 
 export default function MapPage() {
   const mapRef = useRef<HTMLDivElement | null>(null);
-  const leafletRef = useRef<L.Map | null>(null);
+  const leafletRef = useRef<Map | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -16,8 +16,10 @@ export default function MapPage() {
     // Ensure the container has non-zero size before initializing Leaflet
     const hasSize = () => (container.offsetWidth > 0 && container.offsetHeight > 0);
 
-    const initMap = () => {
+    const initMap = async () => {
       if (!mapRef.current || leafletRef.current) return;
+      const Lmod = await import("leaflet");
+      const L = (Lmod as any).default ?? (Lmod as any);
       const map = L.map(mapRef.current, { zoomControl: true });
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -31,7 +33,7 @@ export default function MapPage() {
       });
 
       // Default marker icon fix for Next bundling
-      const icon = L.icon({
+      const icon: Icon = L.icon({
         iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
         shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
         iconSize: [25, 41],
@@ -40,7 +42,9 @@ export default function MapPage() {
 
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          (pos) => {
+          async (pos) => {
+            const Lmod = await import("leaflet");
+            const L = (Lmod as any).default ?? (Lmod as any);
             // Guard: map might be removed during async callback
             if (!leafletRef.current) return;
             const { latitude, longitude } = pos.coords;
